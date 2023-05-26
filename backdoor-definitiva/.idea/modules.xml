@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/backdoor-definitiva.iml" filepath="$PROJECT_DIR$/.idea/backdoor-definitiva.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../backup elia/python/pythonProject/.idea/pythonProject.iml" filepath="$PROJECT_DIR$/../../../backup elia/python/pythonProject/.idea/pythonProject.iml" />
     </modules>
   </component>
 </project>

