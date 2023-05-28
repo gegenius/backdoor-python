@@ -70,7 +70,7 @@ class Connection:
             pass
         try:
             crc32 = zlib.crc32(data).to_bytes(6, 'big')
-            data = Fernet(self.criptokey).encrypt(data)
+            data = self.criptokey.encrypt(data)
             packet = data + b'@' + crc32
             self.conn.send(packet)
             return True
@@ -78,7 +78,7 @@ class Connection:
             return False
 
     def RECV(self):
-        #try:
+        try:
             data = self.conn.recv(4080)
             data = data.split(b'@')
             crc32 = data[-1]
@@ -96,5 +96,5 @@ class Connection:
                 return False
             else:
                 return payload
-        #except:
-         #   return False
+        except:
+            return False

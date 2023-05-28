@@ -1,4 +1,5 @@
 #import
+import sys
 import os
 import zlib
 import socket
@@ -10,16 +11,13 @@ class Connection:
     def __init__(self):
         self.sock = None
         self.stat = False
-        self.ip = "192.168.42.32"
+        self.ip = "192.168.1.101"
         self.port = 10000
         self.criptokey = Fernet(b'PwgEU6_d09vEPRrFpLgtnUf_ixxUxThA94Ma31823iI=')
 
 
 
 
-
-    def returnself(self):
-        return self
 
     def INIT_CONN(self):
         try:
@@ -79,7 +77,11 @@ class Connection:
 
     def RECV(self):
         try:
-            data = self.sock.recv(4080)
+            try:
+                data = self.sock.recv(4080)
+            except:
+                sys.exit()
+
             data = data.split(b'@')
             crc32 = data[-1]
             data.pop(-1)

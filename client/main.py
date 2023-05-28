@@ -30,7 +30,7 @@ while True:
     if command.split()[0] == "runscript":
         filecontent = None
         try:
-            script = command.split[1]
+            script = command.split(" ")[1]
         except:
             print("[sintax] 'runscript {path}'")
         try:
@@ -39,14 +39,18 @@ while True:
             filescript.close()
         except:
             print("[err] impossibile trovare il path dello script")
-        if filecontent != None:
+        if type(filecontent) != "<class 'str'>":
             Connection.SEND("scr" + filecontent)
 
     else:
-        Connection.SEND("com" + command)
+        Connection.SEND("com" + command.replace("\\", "\\\\"))
 
-
-    try:
-        print(Connection.RECV().decode())
-    except:
-        print("[err] impossibile ricevere il messaggio")
+    response = Connection.RECV()
+    if response != False:
+        try:
+            print(response.decode())
+        except:
+            print("[err] impossibile mettere in output il messaggio ricevuto")
+    else:
+        print("[err] connessione caduta")
+        break
