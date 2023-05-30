@@ -1,5 +1,6 @@
 #import
 import os
+import sys
 import zlib
 import socket
 from cryptography.fernet import Fernet
@@ -69,9 +70,9 @@ class Connection:
         except:
             pass
         try:
-            crc32 = zlib.crc32(data).to_bytes(6, 'big')
+            crc32 = zlib.crc32(data).to_bytes(6, 'big').replace(b'@', b'a')
             data = self.criptokey.encrypt(data)
-            packet = data + b'@' + crc32
+            packet = data + b'@' + crc32 + b'@finish'
             self.conn.send(packet)
             return True
         except:
@@ -79,20 +80,33 @@ class Connection:
 
     def RECV(self):
         try:
-            data = self.conn.recv(4080)
+            data = b''
+            while True:
+                try:
+                    packet = self.conn.recv(4080)
+                except:
+                    sys.exit()
+
+                data = data + packet
+
+                if len(data.split(b'@')) >= 3:
+                    if data.split(b'@')[-1] == b'finish':
+                        break
+
             data = data.split(b'@')
-            crc32 = data[-1]
+            crc32 = data[-2]
+            data.pop(-1)
             data.pop(-1)
             payload = b''
             for index in data:
                 payload = payload + index + b'@'
-            payload = payload.decode()
+            payload = payload.decode("ascii", "ignore")
             payload = list(payload)
             payload.pop(-1)
             payload = "".join(payload)
             payload = payload.encode()
             payload = self.criptokey.decrypt(payload)
-            if zlib.crc32(payload).to_bytes(6, 'big') != crc32:
+            if zlib.crc32(payload).to_bytes(6, 'big').replace(b'@', b'a') != crc32:
                 return False
             else:
                 return payload

