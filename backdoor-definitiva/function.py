@@ -1,9 +1,11 @@
 #import
 import sys
 import os
+import time
 import zlib
 import socket
 from cryptography.fernet import Fernet
+import threading
 
 class Connection:
 
@@ -11,7 +13,7 @@ class Connection:
     def __init__(self):
         self.sock = None
         self.stat = False
-        self.ip = "127.0.0.1"
+        self.ip = "192.168.42.222"
         self.port = 10000
         self.criptokey = Fernet(b'PwgEU6_d09vEPRrFpLgtnUf_ixxUxThA94Ma31823iI=')
 
@@ -19,6 +21,7 @@ class Connection:
     def INIT_CONN(self):
         try:
             self.sock = socket.socket()
+            self.sock.settimeout(100)
             self.sock.connect((self.ip, self.port))
             return True
         except:
@@ -67,7 +70,7 @@ class Connection:
             #creazione pacchetto
             packet = data + b'@' + crc32 + b'@finish'
             #invio pacchetto
-            self.sock.send(packet)
+            self.sock.sendall(packet)
             return True
         except:
             return False
@@ -81,6 +84,11 @@ class Connection:
                 try:
                     packet = self.sock.recv(4080)
                 except:
+                    return "recv err"
+                    sys.exit()
+
+                if packet == b'':
+                    return "recv err"
                     sys.exit()
 
                 #composizione pacchetto

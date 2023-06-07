@@ -30,6 +30,7 @@ class Connection:
     def INIT_CONN(self):
         try:
             self.sock = socket.socket()
+            #self.sock.settimeout()
             self.sock.bind((self.ip, self.port))
             self.sock.listen(1)
             return True
@@ -89,15 +90,25 @@ class Connection:
     def RECV(self):
         try:
             data = b''
+            c = 0
             #recezione pacchetti in loop
             while True:
+                c = c + 1
                 try:
                     packet = self.conn.recv(4080)
                 except:
+                    return "recv err"
+                    sys.exit()
+
+                if packet == b'':
+                    return "recv err"
                     sys.exit()
 
                 #sommario pacchetti
                 data = data + packet
+
+                if c % 100 == 0:
+                    print("[*] dimensione pacchetti ricevuti del frame " + str(sys.getsizeof(data) / 1000000) + " MB")
 
                 #controllo integrità pacchetto
                 if len(data.split(b'@')) >= 3:
